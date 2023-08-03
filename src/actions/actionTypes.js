@@ -1,0 +1,5 @@
+export const SET_USER = 'SET_USER';
+export const SET_LOADING_STATUS = 'SET_LOADING_STATUS';
+export const GET_ARTICLES = 'GET_ARTICLES';
+export const SET_DISPLAY_PHOTO = 'SET_DISPLAY_PHOTO';
+export const SET_COVER_PHOTO = 'SET_COVER_PHOTO';
