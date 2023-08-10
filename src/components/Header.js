@@ -71,10 +71,10 @@ function Header(props){
                             </a>
                         </Navlist>
                         <Navlist>
-                            <a >
+                            <NavLink to='/messages' >
                                 <img src="/images/nav-messaging.svg" alt="" />
                                 <span>messaging</span>
-                            </a>
+                            </NavLink>
                         </Navlist>
                         <Navlist>
                             <a>
@@ -347,6 +347,7 @@ const Signout = styled.div`
         margin: -10px;
         &:hover{
             text-decoration: none !important;
+            background: rgba(0,0,0, .05);
         }
     }
 `

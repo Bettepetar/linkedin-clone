@@ -1,9 +1,9 @@
 import { auth, provider, storage } from "../firebaseApp";
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { GET_ARTICLES, SET_COVER_PHOTO, SET_LOADING_STATUS, SET_USER } from "./actionTypes";
+import { GET_ARTICLES, SET_COVER_PHOTO, SET_LOADING_STATUS, SET_USER, SET_ALL_USERS, SET_CHAT_LOADING, SET_INCOMING_MSG, SET_OUTGOING_MSG, SET_ALL_MESSAGES } from "./actionTypes";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import db from "../firebaseApp";
-import { addDoc, collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { addDoc, and, collection, onSnapshot, or, orderBy, query, where } from "firebase/firestore";
 
 export const setUser = (payload) => ({
     type: SET_USER,
@@ -13,7 +13,28 @@ export const setCoverPhoto = (payload) =>({
     type: SET_COVER_PHOTO,
     payload: payload,
 }); 
+export const setAllUsers = (payload) => ({
+    type: SET_ALL_USERS,
+    users: payload
+})
+export const setAllMsg = (payload) => ({
+    type:  SET_ALL_MESSAGES,
+    payload: payload
+})
 
+export const setIncomingMSG = (payload) => ({
+    type: SET_INCOMING_MSG,
+    payload: payload
+})
+export const setOutgoingMSG = (payload) => ({
+    type: SET_OUTGOING_MSG,
+    payload: payload
+})
+
+export const setChatLoading = (payload) => ({
+    type: SET_CHAT_LOADING,
+    status: payload
+})
 export const setloading = (status, progress = 0) =>({
     type: SET_LOADING_STATUS,
     status: status,
@@ -24,6 +45,9 @@ export function signInAPI(){
         signInWithPopup(auth, provider)
         .then((payload) => {
             // save to db
+            console.log(payload.additionalUserInfo?.isNewUser)
+            console.log(payload.additionalUserInfo)
+            console.log(payload)
             // const colRef = collection(db, 'users')
             // addDoc(colRef, {
             //     displayName: payload.user.displayName,
@@ -46,7 +70,6 @@ export function getUserAuth(){
     return (dispatch) =>{
         onAuthStateChanged(auth, (user) =>{
             if(user){
-                console.log(user)
                return dispatch(setUser(user))
             }
         })
@@ -160,11 +183,81 @@ export const getArticlesAPI = () => {
 }
 
 
+export const getAllUsersAPI = () => {
+    return (dispatch) => {
+        let payload;
+        const colRef = collection(db, 'users');
+        onSnapshot(colRef, (snapshot) => {
+            payload = snapshot.docs.map((doc) => ({...doc.data(), id: doc.id}))
+            dispatch(setAllUsers(payload))
+        })
+    }
+}
+
+export const getIncomingMsgAPI = (user) => {
+    return (dispatch) => {
+        dispatch(setChatLoading(true))
+        let payload;
+        const colRef = collection(db, 'messages')
+        const q = query(colRef, where('recieverID', '==', user))
+        // const q = query(colRef, where('recieverID', '==', user), where('senderID', '==', 'vsvWFvjbZxTL3azErCVGFdCTQvL2'))
+        onSnapshot(q, (snapshot) => {
+            payload = snapshot.docs.map((doc) => ({...doc.data(), id: doc.id}))
+            dispatch(setIncomingMSG(payload))
+            dispatch(setChatLoading(false))
+        })
+    }
+}
+
+export const getOutgoingMsgAPI = (user) => {
+    return (dispatch) => {
+        dispatch(setChatLoading(true))
+        let payload;
+        const colRef = collection(db, 'messages')
+        const q = query(colRef, where('senderID', '==', user))
+        // const q = query(colRef, where('recieverID', '==', user), where('senderID', '==', 'vsvWFvjbZxTL3azErCVGFdCTQvL2'))
+        onSnapshot(q, (snapshot) => {
+            payload = snapshot.docs.map((doc) => ({...doc.data(), id: doc.id}))
+            dispatch(setOutgoingMSG(payload))
+            dispatch(setChatLoading(false))
+        })
+    }
+}
 
 
 
+export const getAllMsgs = (user) => {
+    return (dispatch) => {
+        dispatch(setChatLoading(true))
+        let payload;
+        const colRef = collection(db, 'messages')
+        const q = query(colRef, or(where('recieverID', '==', user), where('senderID', '==', user)), orderBy('timeStamp'))
+        onSnapshot(q, (snapshot) => {
+            payload = snapshot.docs.map((doc) => ({...doc.data(), id: doc.id}))
+            dispatch(setAllMsg(payload))
+            console.log(payload)
+            dispatch(setChatLoading(false))
+        })
+    }
+}
 
 
+export const getChat = (userID) => {
+    console.log(userID)
+}
+export const sendMsgAPI = (payload) => {
+    return (dispatch) => {
+            dispatch(setChatLoading(true))
+        addDoc(collection(db, 'messages'), {
+            text: payload.text,
+            recieverID: payload.recieverID,
+            senderID: payload.senderID,
+            timeStamp: payload.timeStamp
+        }).then(() => {
+            dispatch(setChatLoading(false))
+        })
+    }
+}
 
 
 

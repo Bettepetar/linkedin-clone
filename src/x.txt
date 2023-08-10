@@ -1,0 +1,44 @@
+
+                    {  //props.chatLoading === false &&
+                        //props Messages contains all msgs the loged user Sent
+                        !props?.outgoingMsg && props.outgoingMsg?.map((message) => (
+                             // case for receiver
+                             //** if the logged user ID === reciever ID */
+                             //** if the props UserID === reciever ID */
+                                message.recieverID === props.userID && (
+                                <OutgoingChat key={message.id}> 
+                                    <div>
+                                    {/* <img src={message.photoURL} alt="" />                         */}
+                                    <img src={props.user.photoURL} alt="" />
+                                    <a> <h3>{props.user && props.user.displayName ? props.user.displayName: 'User Name'}</h3></a>
+                                    
+                                    </div>
+                                                <Message>
+                                                    <div>{message.text}</div>
+                                                    <div>{message.text}</div>
+                                                </Message>
+                                </OutgoingChat>
+
+                                )
+                        ))
+                    }
+
+                     { !props?.incomingMsg?.map((message) => (
+                        // received msgs show be all the msgs where receiver === logged user (msg sent to the loged User IncominMSg) 
+                        // map all Msg and if propsUser is the Sender
+                            message.senderID === props.userID && 
+                            (
+                            <IncomingChat key={message.id}> 
+                                <div>
+                                    <img src={chatUser.photoURL} alt="" />
+                                    <a> <h3>{chatUser.displayName}</h3></a>
+                                </div>
+                                <Message>
+                                    <div>{message.text}</div>
+                                    <div>{message.text}</div>
+                                </Message>
+                            </IncomingChat>
+
+                            )
+                        ))
+                    }

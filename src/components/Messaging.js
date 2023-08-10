@@ -4,9 +4,24 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CreateIcon from '@mui/icons-material/Create';
 import { Search, SearchIcon } from "./Header";
 import { useState } from "react";
-function Messaging () {
-    const [openChat, setOpenChat] = useState(true);
-     const [chatOpen, setChatOpen] = useState('close');
+import { useEffect } from "react";
+import { connect } from "react-redux";
+import { getAllUsersAPI } from "../actions";
+import Chat from "./Chat";
+function Messaging (props) {
+    const [openChat, setOpenChat] = useState(false); // for this
+    const [chatOpen, setChatOpen] = useState('close'); // for Chat area
+    const [userID, setUserID] = useState(null);
+    const [chatUsers, setChatUsers] = useState([])
+    
+    useEffect(() => {
+        props.getChatUsers()
+        if(props.chatUsers){
+            setChatUsers(props.chatUsers?.filter(user => user.uid !== props.user?.uid))
+        }
+    }, [userID])
+    
+
     const handleClick = () => {
         switch (openChat) {
             case true:
@@ -23,9 +38,9 @@ function Messaging () {
     }
     return (
         <>
-        {
-             (
-
+        <Chat
+         userID={userID}
+        />
         <Container openChat={openChat}>
             <Header onClick={() => handleClick(false)}>
                 <Logo>
@@ -33,7 +48,7 @@ function Messaging () {
                         <img src="/images/user.svg" alt="" />
                         <span></span>
                     </div>
-                    <h3>Messaging <span>{chatOpen}</span></h3>
+                    <h3>Messaging</h3>
                 </Logo>
                 <Icons> 
                     <div>   
@@ -59,42 +74,27 @@ function Messaging () {
                 </Achive>
             </SearchBar>
             <DisplayMessage>
-              <a onClick={() => setChatOpen('open')}>
-                <UserDetails> 
-                    <UserImg>
-                        <img src="/images/user.svg" alt="" />
-                    </UserImg>
-                    <div>
-                    <h2>Cyril Peter</h2>
-                        <span>username</span>
-                        <p>Send you a message ...</p>
-                        {/* Thanks for being a valued member – we’re so glad you’re here. We’d like to offer you a 1-month free trial of LinkedIn Premium to help you uncover new opportunities. */}
-                    </div>
-                </UserDetails>
-                <div>
-                    date
-                </div>
-              </a>
-              <a >
-                <UserDetails> 
-                    <UserImg>
-                        <img src="/images/user.svg" alt="" />
-                    </UserImg>
-                    <div>
-                    <h2>James Enoch</h2>
-                        <span>username</span>
-                        <p>Send you a message ...</p>
-
-                    </div>
-                </UserDetails>
-                <div>
-                    date
-                </div>
-              </a>
+                    {
+                        chatUsers && chatUsers.map((user) => (
+                            <a key={user.id} onClick={() => setUserID(user.id)}>
+                                <UserDetails> 
+                                    <UserImg>
+                                        <img src={user.photoURL} alt="" />
+                                    </UserImg>
+                                    <div>
+                                    <h2>{user.displayName}</h2>
+                                        <span>{user.username}</span>
+                                        <p>Send you a message ...</p>
+                                    </div>
+                                </UserDetails>
+                                <div>
+                                    date
+                                </div>
+                            </a>
+                        ))
+                    }
             </DisplayMessage>
         </Container> 
-        )
-    }
         </>
     )
 }
@@ -194,6 +194,7 @@ const DisplayMessage = styled.div`
     a{
         display: flex;
         justify-content: space-between;
+        cursor: pointer;
         &:hover{
             background-color: rgba(0,0,0,.08);
         }
@@ -224,4 +225,11 @@ const UserDetails = styled.div`
         font-size: 12px;
     }
 `
-export default Messaging;
+const mapStateToProps = (state) => ({
+    chatUsers: state.chatState.users,  
+    user: state.userState.user,
+})
+const mapDispatchToProps = (dispatch) => ({
+    getChatUsers: () => dispatch(getAllUsersAPI())
+})
+export default connect(mapStateToProps, mapDispatchToProps)(Messaging)

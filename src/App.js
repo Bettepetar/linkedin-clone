@@ -6,12 +6,13 @@ import './App.css';
 import Header from './components/Header';
 import Home from './components/Home';
 import Login from './components/Login';
+import Messages from './components/Messages';
 import Profile from './components/Profile';
 
 function App(props) {
   useEffect(()=>{
     props.getUserAuth();
-    console.log('in am from app')
+    // console.log(props.user)
   }, [props]);
   // console.log(props.getUserAuth())
   return (
@@ -29,13 +30,19 @@ function App(props) {
             <Header />
             <Profile />
           </Route>
+          <Route path='/messages'>
+            <Header />
+            <Messages />
+          </Route>
         </Switch>
       </Router>
     </div>
   );
 }
 
-const mapStateToProps = (state) => ({})
+const mapStateToProps = (state) => ({
+  user: state.userState.user
+})
 const mapDispatchToProps = (dispatch)=> ({
   getUserAuth: () => dispatch(getUserAuth())
 })
