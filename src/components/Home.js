@@ -20,7 +20,7 @@ function Home(props){
                 <Main />
                 <Rightside />
             </Layout>
-            <Messaging />
+            <Messaging small/>
             <Chat />
         </Container>
     )

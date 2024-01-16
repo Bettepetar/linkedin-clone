@@ -7,6 +7,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import MmsIcon from '@mui/icons-material/Mms';
 import GifIcon from '@mui/icons-material/Gif';
 import CloseIcon from '@mui/icons-material/Close';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
 import { getAllMsgs, getIncomingMsgAPI, getOutgoingMsgAPI, sendMsgAPI } from "../actions";
 import { useEffect } from "react";
@@ -14,6 +15,7 @@ import { doc, onSnapshot, serverTimestamp } from "firebase/firestore";
 import db from "../firebaseApp";
 function Chat (props) {
     const [msgText, setMsgText] = useState('')
+    const [minmax, setMinmax] = useState('max')
     const [openChatMsg, setChatMsgOpen] = useState('close')
     const [chatUser, setChatUser] = useState(null);
     const [senderID,  setSenderrID] = useState('') //the logged in userID
@@ -25,7 +27,7 @@ function Chat (props) {
             props.getMsg(senderID)
             props.getIncominChat(senderID)
             props.getOutgoingChat(senderID)
-            console.log(props.messages, senderID)
+            console.log( props.userID)
         }
         if(props.chatUsers){
             const _senderID = props.chatUsers.filter(user => user.uid === props.user.uid)
@@ -44,6 +46,21 @@ function Chat (props) {
                 break
             default:
                 setChatMsgOpen('close')
+                break;
+        }
+    }
+    
+    
+    const minimax = () => {
+        switch (minmax) {
+            case 'max':
+                setMinmax('min')
+                break;
+            case 'min':
+                setMinmax('max')
+                break
+            default:
+                setMinmax('max')
                 break;
         }
     }
@@ -67,24 +84,59 @@ function Chat (props) {
         <>
         {
             chatUser && (
-        <ChatContainer chat={openChatMsg}>
-            <ChatHeader onClick={toggleChat}>
-                <ChatLogo>
-                    <div>   
-                        <img src={chatUser.photoURL} alt="" />
-                    </div>
-                    <a> {chatUser ? chatUser.displayName : 'User Name'}{props.userID}</a>
+        <ChatContainer minmax={minmax} second={props.second} chat={openChatMsg} small={props.small} large={props.large}>
+            
+            <ChatHeader 
+                
+            >
+                <ChatLogo
+
+                    onClick={props.small && toggleChat}
+                >
+                    {
+                        !props.large && (
+                            <div>   
+                                <img src={chatUser.photoURL} alt="" />
+                            </div>
+                        )
+                    }
+                    <a> {chatUser ? chatUser.displayName  : 'user Name'}</a>
                 </ChatLogo>
                 <ChatIcons> 
-                    <div>   
-                        <MoreHorizIcon />
-                    </div>
-                    <div>   
-                        <CloseFullscreenIcon />
-                    </div>
-                    <div>   
-                        <CloseIcon />
-                    </div>
+                    {
+                        (!props.large) ? (
+                            <>
+                                {openChatMsg === 'open' && (
+                                    <>
+                                        <div>   
+                                            <MoreHorizIcon />
+                                        </div>
+                                        <div>   
+                                            <CloseFullscreenIcon 
+                                                
+                                                onClick={props.small && minimax}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                                <div>   
+                                    <CloseIcon />
+                                </div>
+                            </>
+
+                            )
+                            : (
+                                <>
+                                    <div>   
+                                        <MoreHorizIcon />
+                                    </div>
+                                    <div>   
+                                        <StarBorderIcon />
+                                    </div>
+                                </>
+                                
+                            )
+                    }
                 </ChatIcons>
             </ChatHeader>
             <ReceiverDetails> 
@@ -161,20 +213,31 @@ function Chat (props) {
     )
 }
 const ChatContainer = styled.div`
-    position: fixed;
     background-color: #fff;
     box-shadow: 0 0 0 1px rgb(0 0 0 / 15%), 0 0 0 rgb(0 0 0 / 20%);
-    padding: 10px;
-    border-radius: 6px;
+        border-radius: 6px;
+        transition: all 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s;
+    ${ props => props.small && `
+        // position: fixed;
+        // right: 340px;
+        z-index: 999999;
+    `}
+    ${ props => (props.small && props.chat && props.minmax) && `
+        margin-bottom: ${ props.chat === 'open' ? '0' : '-550px'};
+        width: ${ props.chat === 'close' ? '280px' : '400px'};
+        ${ (props.chat === 'open' && props.minmax === 'max') && `
+            width: 600px;
+        `}
+    `}
 
-    // display: none;
-    position: fixed;
-    // bottom: -100%;
-    bottom: ${props => props.chat === 'open' ? '5px' : '-76%'};
-    right: 340px;
-    // min-width: 500px;
-    min-width: ${props => props.chat === 'close' ? '350px' : '600px'};
-    z-index: 999999;
+    ${ props => props.large && `
+        position: initial;
+        min-width: 600px !important;
+        border-radius: 0 6px 6px 0;
+    `}
+    ${ props => (props.second && props.chat) && `
+        // right: ${ props.chat === 'close' ? 'calc(320px + 340px + 2px)' : 'calc(602px + 340px)'};
+    `}
 
 `
 const ChatHeader = styled.header`
@@ -182,8 +245,8 @@ const ChatHeader = styled.header`
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(0,0,0, .15);
-    padding-bottom: 20px;
-    margin-bottom: 10px; 
+    padding: 10px 10px 20px;
+    margin-bottom: 2px; 
     cursor: pointer;
 `
 const ChatIcons = styled.div`
@@ -206,6 +269,7 @@ div{
 const ChatLogo = styled.a`
 display: flex;
 align-items: center;
+flex-grow: 1;
 div{
     width: 45px;
     height: 45px;
@@ -234,8 +298,11 @@ div{
 `
 
 const ReceiverDetails = styled.div`
+        height: 330px;
+        overflow: auto;
+        padding-left: 10px;
     & > div {
-        padding-bottom: 5px;
+        padding:0 0 5px;
         border-bottom: 1px solid rgba(0,0,0, .15);
         a{
             cursor: pointer;
@@ -258,8 +325,7 @@ const ReceiverDetails = styled.div`
     }
 `
 const ChatSection = styled.section`
-        height: 220px;
-        overflow: auto;
+    padding: 10px;
 `
 const OutgoingChat = styled.div`
     position: relative;
@@ -306,7 +372,7 @@ const Message = styled.div`
 `
 const TextArea = styled.section`
     border-top: 1px solid rgba(0,0,0, .15);
-    padding-top: 10px;
+    padding: 10px;
     border: 1px solid 
     width: 100%;
     position: relative;
@@ -326,6 +392,7 @@ const TextSection = styled.div`
 `
 const ButtonGroups = styled.div`
     display: flex;
+    padding: 5px;
     align-items: center;
     justify-content: space-between;
     border-top: 1px solid rgba(0,0,0, .15);
